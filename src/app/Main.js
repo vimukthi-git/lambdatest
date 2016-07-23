@@ -52,15 +52,9 @@ const cellstyle = {
 
 const documentTypes = ["National ID", "Pasport"];
 
-
 /**
- * Vertical steppers are designed for narrow screen sizes. They are ideal for mobile.
- *
- * To use the vertical stepper with the contained content as seen in spec examples,
- * you must use the `<StepContent>` component inside the `<Step>`.
- *
- * <small>(The vertical stepper can also be used without `<StepContent>` to display a basic stepper.)</small>
- */
+Main work flow manager component
+**/
 class Main extends React.Component {
 
   constructor() {
