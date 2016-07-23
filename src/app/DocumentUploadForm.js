@@ -50,8 +50,7 @@ class DocumentUploadForm extends React.Component {
   }
 
   isValid() {
-      // TODO validations
-      return true;
+      return this.refs.document_number.getValue() !== "";
   }
 
   getUploadedDocument() {
@@ -78,6 +77,15 @@ class DocumentUploadForm extends React.Component {
     this.setState({uploadedFileName: ""})
   }
 
+  onFieldChange(event, value) {
+    let component = this.refs.document_number;
+    if (value === "") {
+      component.setState({errorText: "This field can not be empty"});
+    } else {
+      component.setState({errorText: null});
+    }
+  }
+
   render() {
     return (
       <div>
@@ -91,6 +99,7 @@ class DocumentUploadForm extends React.Component {
         <TextField
           ref="document_number"
           floatingLabelText="Document Number"
+          onChange={this.onFieldChange.bind(this)}
           defaultValue={this.props.documentNumber}
         /><br />
         <br />

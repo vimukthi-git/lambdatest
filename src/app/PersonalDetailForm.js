@@ -28,12 +28,14 @@ class PersonalDetailForm extends React.Component {
 
   constructor(props) {
     super(props);
-    this.state = {country: props['country']};
+    this.state = {emailValid: false, country: props['country']};
   }
 
   isValid() {
       // TODO validations
-      return true;
+      return this.refs.first_name.getValue() && this.refs.last_name.getValue()
+      && this.refs.email.getValue() && this.refs.address_line_1.getValue()
+      && this.refs.postal_code.getValue() && this.refs.city.getValue() && this.state.emailValid;
   }
 
   getPersonDetails() {
@@ -56,6 +58,25 @@ class PersonalDetailForm extends React.Component {
   handleCountryChange(event, index, value) {
     this.setState({country:value});
   };
+
+  onFieldChange(event, value) {
+    let component = this.refs[event.target.id];
+    if (value === "" && event.target.id !== "address_line_2") {
+        component.setState({errorText: "This field can not be empty"});
+    } else if (event.target.id === "email") {
+      let email = component.getValue();
+      var re = /^(([^<>()[\]\\.,;:\s@\"]+(\.[^<>()[\]\\.,;:\s@\"]+)*)|(\".+\"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+      if (re.test(email)) {
+        this.state.emailValid = true;
+        component.setState({errorText: null});
+      } else {
+        this.state.emailValid = false;
+        component.setState({errorText: "Please enter a valid email"});
+      }
+    } else {
+      component.setState({errorText: null});
+    }
+  }
 
   render() {
     return (
@@ -81,36 +102,50 @@ class PersonalDetailForm extends React.Component {
         </RadioButtonGroup>
         <TextField
           ref="first_name"
+          id="first_name"
+          onChange={this.onFieldChange.bind(this)}
           floatingLabelText="First Name"
           defaultValue={this.props.firstName}
         /><br />
         <TextField
           ref="last_name"
+          id="last_name"
+          onChange={this.onFieldChange.bind(this)}
           floatingLabelText="Last Name"
           defaultValue={this.props.lastName}
         /><br />
         <TextField
           ref="email"
+          id="email"
+          onChange={this.onFieldChange.bind(this)}
           floatingLabelText="Email"
           defaultValue={this.props.email}
         /><br />
         <TextField
           ref="address_line_1"
+          id="address_line_1"
+          onChange={this.onFieldChange.bind(this)}
           floatingLabelText="Address Line 1"
           defaultValue={this.props.address1}
         /><br />
         <TextField
           ref="address_line_2"
+          id="address_line_2"
+          onChange={this.onFieldChange.bind(this)}
           floatingLabelText="Address Line 2"
           defaultValue={this.props.address2}
         /><br />
         <TextField
           ref="postal_code"
+          id="postal_code"
+          onChange={this.onFieldChange.bind(this)}
           floatingLabelText="Postal Code"
           defaultValue={this.props.postalCode}
         /><br />
         <TextField
           ref="city"
+          id="city"
+          onChange={this.onFieldChange.bind(this)}
           floatingLabelText="City"
           defaultValue={this.props.city}
         /><br />
