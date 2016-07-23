@@ -6,3 +6,15 @@ body {
   font-size: 13px;
   line-height: 20px;
 }
+.table {
+  display: table;
+  border-collapse: separate;
+  border-spacing: 10px;
+}
+
+.row { display:table-row; }
+
+.cell {
+  display:table-cell;
+  padding:5px;
+}

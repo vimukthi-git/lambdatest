@@ -17,11 +17,38 @@ import Dialog from 'material-ui/Dialog';
 import LinearProgress from 'material-ui/LinearProgress';
 import Paper from 'material-ui/Paper';
 import {List, ListItem} from 'material-ui/List';
+import AppBar from 'material-ui/AppBar';
+import FileIcon from 'material-ui/svg-icons/file/file-download';
+import IconButton from 'material-ui/IconButton';
+
+AWS.config.region = 'eu-west-1';
+AWS.config.credentials = new AWS.CognitoIdentityCredentials({
+    IdentityPoolId: 'eu-west-1:24d1cd18-f53a-4f67-b91c-7683c843852c'
+});
+
 
 const paperstyle = {
   margin: 20,
+  width: '80%',
   display: 'inline-block',
 };
+
+const tablestyle = {
+  display: 'table',
+  borderCollapse: 'separate',
+  borderSpacing: 10,
+};
+
+const rowstyle = {
+  display:'table-row'
+};
+
+const cellstyle = {
+  display: 'table-cell',
+  padding: 10
+};
+
+
 
 const documentTypes = ["National ID", "Pasport"];
 
@@ -57,7 +84,7 @@ class Main extends React.Component {
         },
         document_submitted: false,
         document_type: 0,
-        document_number: "",
+        document_number: null,
         confirmed: false
       },
       uploadedFileName: null
@@ -69,7 +96,7 @@ class Main extends React.Component {
     Request
       .post('https://4ih7avgzp9.execute-api.eu-central-1.amazonaws.com/test/client')
       .send(this.state.personDetails)
-      //.set('blanco-Key', 'foobar')
+      .set('x-api-Key', 'd4eak85a5w8SV2EfvLUE1aF30D9V33V5aFTvSmsO')
       .set('Accept', 'application/json')
       .end(function(err, res){
         console.log(err, res);
@@ -112,22 +139,37 @@ class Main extends React.Component {
   };
 
   idFileHandler(file) {
-    console.log(file);
     this.setState({upload: true});
-    Request.put('http://blanco-uploads.s3-website.eu-central-1.amazonaws.com/' + file.name)
-    .set("Content-Type", "application/octet-stream")
-    .set("key", "test")
-    .send(file)
-    .end((err, res) => {
-        if (err) {
-          console.log(err);
-        } else {
-          console.log(res);
-          //this.refs.upload_form.setState({uploadedFileName: file.name});
+
+    AWS.config.credentials.get(function(err) {
+        if (err) alert(err);
+        //console.log(AWS.config.credentials);
+    });
+
+    var bucketName = 'blanco-files'; // Enter your bucket name
+    var bucket = new AWS.S3({
+        params: {
+            Bucket: bucketName
         }
-        this.refs.upload_form.setState({uploadedFileName: file.name});
-        this.setState({upload: false});
-    })
+    });
+    var objKey = 'uploads/' + this.state.personDetails.email;
+    var params = {
+        Key: objKey,
+        ContentType: file.type,
+        Body: file,
+        ACL: 'public-read'
+    };
+
+    let _this = this;
+    bucket.putObject(params, function(err, data) {
+        if (err) {
+            console.log(err);
+        } else {
+            _this.setState({uploadedFileName: file.name})
+            console.log(data);
+        }
+        _this.setState({upload: false});
+    });
   }
 
   renderStepActions(step) {
@@ -159,8 +201,14 @@ class Main extends React.Component {
     const {finished, stepIndex} = this.state;
 
     return (
+
       <MuiThemeProvider muiTheme={getMuiTheme(lightBaseTheme)}>
-        <div style={{maxWidth: 380, maxHeight: 400, margin: 'auto'}}>
+        <div>
+          <AppBar
+            title="Blanco Client Onboarding System"
+            showMenuIconButton={false}
+          />
+        <div style={{maxWidth: 600, maxHeight: 400, margin: 'auto'}}>
           <Dialog
             title="Please wait while we upload you document"
             modal={true}
@@ -196,7 +244,6 @@ class Main extends React.Component {
                   uploadedFileName={this.state.uploadedFileName}
                   idFileHandler={this.idFileHandler.bind(this)}
                   />
-
                 {this.renderStepActions(1)}
               </StepContent>
             </Step>
@@ -204,19 +251,61 @@ class Main extends React.Component {
               <StepLabel>Confirmation</StepLabel>
               <StepContent>
                 <Paper style={paperstyle} zDepth={1} >
-                  <List>
-                    <ListItem primaryText={`Salutation: ${this.state.personDetails.salutation}`}/>
-                    <ListItem primaryText={`First Name: ${this.state.personDetails.first_name}`}/>
-                    <ListItem primaryText={`Last Name: ${this.state.personDetails.last_name}`}/>
-                    <ListItem primaryText={`Email: ${this.state.personDetails.email}`}/>
-                    <ListItem primaryText={`Address Line 1:  ${this.state.personDetails.address1}`}/>
-                    <ListItem primaryText={`Address Line 2: ${this.state.personDetails.address2}`}/>
-                    <ListItem primaryText={`Postal Code: ${this.state.personDetails.postal_code}`}/>
-                    <ListItem primaryText={`City: ${this.state.personDetails.city}`}/>
-                    <ListItem primaryText={`Country: ${this.state.personDetails.country.name}`}/>
-                    <ListItem primaryText={`Document Type: ${documentTypes[this.state.personDetails.document_type]}`}/>
-                    <ListItem primaryText={`Document Number: ${this.state.personDetails.document_number}`}/>
-                  </List>
+                  <div style={tablestyle}>
+                    <div style={rowstyle}>
+                        <div style={cellstyle}>Salutation:</div>
+                        <div style={cellstyle}>{this.state.personDetails.salutation}</div>
+                    </div>
+                    <div style={rowstyle}>
+                        <div style={cellstyle}>First Name:</div>
+                        <div style={cellstyle}>{this.state.personDetails.first_name}</div>
+                    </div>
+                    <div style={rowstyle}>
+                        <div style={cellstyle}>Last Name:</div>
+                        <div style={cellstyle}>{this.state.personDetails.last_name}</div>
+                    </div>
+                    <div style={rowstyle}>
+                        <div style={cellstyle}>Email:</div>
+                        <div style={cellstyle}>{this.state.personDetails.email}</div>
+                    </div>
+                    <div style={rowstyle}>
+                        <div style={cellstyle}></div>
+                        <div style={cellstyle}></div>
+                    </div>
+                    <div style={rowstyle}>
+                        <div style={cellstyle}>Address Line 1:</div>
+                        <div style={cellstyle}>{this.state.personDetails.address_line_1}</div>
+                    </div>
+                    <div style={rowstyle}>
+                        <div style={cellstyle}>Address Line 2:</div>
+                        <div style={cellstyle}>{this.state.personDetails.address_line_2}</div>
+                    </div>
+                    <div style={rowstyle}>
+                        <div style={cellstyle}>Postal Code:</div>
+                        <div style={cellstyle}>{this.state.personDetails.postal_code}</div>
+                    </div>
+                    <div style={rowstyle}>
+                        <div style={cellstyle}>City:</div>
+                        <div style={cellstyle}>{this.state.personDetails.city}</div>
+                    </div>
+                    <div style={rowstyle}>
+                        <div style={cellstyle}>Country:</div>
+                        <div style={cellstyle}>{this.state.personDetails.country.name}</div>
+                    </div>
+                    <div style={rowstyle}>
+                        <div style={cellstyle}>Document Type:</div>
+                        <div style={cellstyle}>{this.state.personDetails.document_type}</div>
+                    </div>
+                    <div style={rowstyle}>
+                        <div style={cellstyle}>Document Number:</div>
+                        <div style={cellstyle}>{this.state.personDetails.document_number}</div>
+                        <div style={cellstyle}>
+                          <IconButton href={`https://s3-eu-west-1.amazonaws.com/blanco-files/uploads/${this.state.personDetails.email}`} tooltip="View ID document"
+                          tooltipPosition="bottom-center">
+                          <FileIcon/>
+                          </IconButton></div>
+                    </div>
+                  </div>
                 </Paper>
                 {this.renderStepActions(2)}
               </StepContent>
@@ -228,6 +317,7 @@ class Main extends React.Component {
             </p>
           )}
         </div>
+      </div>
       </MuiThemeProvider>
     );
   }
